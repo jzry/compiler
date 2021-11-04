@@ -1,0 +1,39 @@
+PAS (4 segments) represented with an array of 500 with default value of 0):
+
+Text:
+
+Data:
+
+Heap:
+
+Stack:
+
+
+CPU (6 registers):
+
+BP:
+
+SP:
+
+PC:
+
+GP:
+
+FREE: heap pointer
+
+IR: 
+
+
+ISA:
+
+24 instructions:
+
+Format: OP L M (operation code) (lexicographic level) (address, number, identity)
+
+
+Instruction cycle carried out in two steps:
+
+Fetch: IR = text[PC] (text only place where instructions are placed)
+Execute: uses data, heap, stack
+
+
