@@ -2,7 +2,7 @@
 
 ## About
 A compiler translates higher level programming language instructions to equivalent (or near equivalent) assembly or machine code instructions that a CPU can use to execute. Higher level programming languages, such as C, C++, or Python, are great for development because they are easy to read, and so they cut the time required to develop a program as compared to writing a program in assembly or machine language, which is nearly illegible.
-This C compiler contains four components: The virtual machine, the lexical analyzer, the parser (intermediate code generator), and the semantic analyzer. It is possible for compilers to contain more components for code optimization to make execution faster, however this specific implementation does not contain one.
+This C compiler contains four components: The virtual machine, the lexical analyzer, the parser (intermediate code generator), and the semantic analyzer. It is possible for compilers to contain more components, such as for code optimization or object code, however this specific implementation is simple and contains only the basics.
 
 ## Input and Output
 The main purpose of any computer is to process input given by a human or another machine to useful output that a human or another machine can use. This specific compiler receives input from a text file that has instructions written in a made up programming language. There are examples of these input files within the component directories to test out individual compiler components, such as the lexical analyzer. The output is displayed to the computer terminal (or shell, command line, etc).
