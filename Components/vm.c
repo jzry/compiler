@@ -178,8 +178,8 @@ int main(int argc, char **argv)
         // Execute instruction.
         switch (IR->OP)
         {
-                // LIT 0, M. Pushes a constant value (literal).
-                // M onto the stack (or DATA).
+            // LIT 0, M. Pushes a constant value (literal).
+            // M onto the stack (or DATA).
             case 1:
                 if (BP == GP)
                 {
@@ -202,8 +202,8 @@ int main(int argc, char **argv)
                 opname[0] = 'L'; opname[1] = 'I'; opname[2] = 'T'; opname[3] = '\0';
                 break;
 
-                // OPR 0, #. Operation to be performed on the
-                // data at the top of the stack (or in data segment).
+            // OPR 0, #. Operation to be performed on the
+            // data at the top of the stack (or in data segment).
             case 2:
                 if (IR->M == 0) // RTN
                 {
@@ -424,9 +424,9 @@ int main(int argc, char **argv)
                 }
                 break;
 
-                // LOD L, M. Load value to top of stack from
-                // the stack location at offset M from L lexicographical levels down.
-                // (Or load a value into the data segment).
+            // LOD L, M. Load value to top of stack from
+            // the stack location at offset M from L lexicographical levels down.
+            // (Or load a value into the data segment).
             case 3:
                 if (BP  == GP)
                 {
@@ -451,9 +451,9 @@ int main(int argc, char **argv)
                 opname[0] = 'L'; opname[1] = 'O'; opname[2] = 'D'; opname[3] = '\0';
                 break;
 
-                // STO L, M. Load value to top of stack from
-                // the stack location at offset M from L lexicographical levels down.
-                // (Or store a value into the data segment)
+            // STO L, M. Load value to top of stack from
+            // the stack location at offset M from L lexicographical levels down.
+            // (Or store a value into the data segment)
             case 4:
                 if (BP == GP)
                 {
@@ -478,8 +478,8 @@ int main(int argc, char **argv)
                 opname[0] = 'S'; opname[1] = 'T'; opname[2] = 'O'; opname[3] = '\0';
                 break;
 
-                // CAL L, M. Call procedure at code index M
-                // (generates new Activation Record and PC = M)
+            // CAL L, M. Call procedure at code index M
+            // (generates new Activation Record and PC = M)
             case 5:
                 pas[SP - 1]  =  base(IR->L, pas, BP); // Static link (SL)
                 pas[SP - 2]  = BP; // Dynamic link (DL)
@@ -491,8 +491,8 @@ int main(int argc, char **argv)
                 opname[0] = 'C'; opname[1] = 'A'; opname[2] = 'L'; opname[3] = '\0';
                 break;
 
-                // INC 0, M. Allocate M memory words (increment SP by M).
-                // (Or increment dp)
+            // INC 0, M. Allocate M memory words (increment SP by M).
+            // (Or increment dp)
             case 6:
                 if (BP == GP)
                 {
@@ -507,7 +507,7 @@ int main(int argc, char **argv)
                 opname[0] = 'I'; opname[1] = 'N'; opname[2] = 'C'; opname[3] = '\0';
                 break;
 
-                // JMP 0, M. Jump to instruction M (PC = M).
+            // JMP 0, M. Jump to instruction M (PC = M).
             case 7:
                 PC = IR->M;
 
@@ -515,7 +515,7 @@ int main(int argc, char **argv)
                 opname[0] = 'J'; opname[1] = 'M'; opname[2] = 'P'; opname[3] = '\0';
                 break;
 
-                // JPC 0, M. Jump to instruction M if top stack or data element is 0.
+            // JPC 0, M. Jump to instruction M if top stack or data element is 0.
             case 8:
                 if (BP == GP)
                 {
@@ -538,7 +538,7 @@ int main(int argc, char **argv)
                 opname[0] = 'J'; opname[1] = 'P'; opname[2] = 'C'; opname[3] = '\0';
                 break;
 
-                // SYS  0, 1. Write system call.
+            // SYS  0, 1. Write system call.
             case 9:
 
                 // Write the top stack element or data element to the screen.
@@ -579,10 +579,10 @@ int main(int argc, char **argv)
                     // End of program, break out of loop.
                     FLAG = 0;
                 }
-                //                else
-                //                {
-                //                    printf("Broken system call.\n");
-                //                }
+//                else
+//                {
+//                    printf("Broken system call.\n");
+//                }
 
                 // Set up the opname.
                 opname[0] = 'S'; opname[1] = 'Y'; opname[2] = 'S'; opname[3] = '\0';

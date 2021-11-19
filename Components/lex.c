@@ -1,7 +1,10 @@
+// Lexical analysis simulator.
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <math.h>
 #include "compiler.h"
 
 #define MAX_NUMBER_TOKENS 500
@@ -10,11 +13,11 @@
 
 #define INVALID_SYM_ERR 1
 #define INVALID_IDENT_ERR 2
-#define EXCESS_IDENT_ERR 3
-#define EXCESS_NUM_ERR 4
+#define EXCESS_NUM_ERR 3
+#define EXCESS_IDENT_ERR 4
 #define UNREC_ERR 5
 
-#define DEBUG 1
+#define DEBUG 0
 
 // Create the max number of tokens by default (token space may go unused).
 lexeme *list;
@@ -25,160 +28,437 @@ int lex_index = 0;
 void printlexerror(int type);
 void printtokens();
 void tokenize(char *buffer);
+void make_lexeme(char *name, int value, token_type type);
 
-// Reset buffer to all zeros.
-char *reset(char *buffer)
+// Free the buffer.
+char *destroyBuffer(char *buffer)
 {
-    for (int i = 0; i < MAX_IDENT_LEN; i++) { buffer[i] = '0'; } return buffer;
-}
-
-// Analyze raw lexis to tokenize.
-lexeme *lexanalyzer(char *input)
-{
-    int counter = 0, inputLen, wordCount = 0, j, i;
-    char *buffer;
-
-    inputLen = strlen(input);
-
-    // Dynamically allocate buffer memory.
-    buffer = malloc(sizeof(char) * (MAX_IDENT_LEN + 1));
-
-    // Initialize the list component.
-    list = malloc(sizeof(lexeme) * MAX_NUMBER_TOKENS);
-
-    // Loop through raw lexis
-    for (i = 0; i < inputLen; i++)
-    {
-        // Used to keep track of token length.
-        counter = 0;
-
-        if (isalpha(input[i]) > 0) // Input is alphabetical
-        {
-            // Keep looping either until we get an error or run into a number.
-            for (j = 0; j < (j + MAX_IDENT_LEN); j++)
-            {
-                // Identifiers must not be greater than 11 in length.
-                if (counter >= MAX_IDENT_LEN)
-                {
-                    printlexerror(EXCESS_IDENT_ERR);
-                    return NULL;
-                }
-
-                // Identifier can be either a number or a letter.
-                if ((isalpha(input[counter]) > 0) || (isdigit(input[counter]) > 0))
-                {
-                    if (DEBUG == 1)
-                    {
-                        printf("%c\n", buffer[counter]);
-                    }
-
-                    // Transfer the contents of the input to the buffer.
-                    buffer[counter] = input[counter];
-
-                    // Increment the buffer counter and input counter.
-                    counter++;
-
-                    // Increment overall count.
-                    i++;
-                }
-                else
-                {
-                    // Non numerical symbol.
-                    break;
-                }
-            }
-        }
-        else if (isdigit(input[i]) > 0) // Input is a digit
-        {
-            // Keep looping either until we get an error or run into a number.
-            for (j = 0; j < (j + MAX_NUMBER_LEN); j++)
-            {
-                // Identifiers must not be greater than 11 in length.
-                if (counter >= MAX_NUMBER_LEN)
-                {
-                    printlexerror(EXCESS_NUM_ERR);
-                    return NULL;
-                }
-
-                // Identifier can only be a number.
-                if (isdigit(input[counter]) > 0)
-                {
-                    if (DEBUG == 1)
-                    {
-                        printf("%c\n", buffer[counter]);
-                    }
-
-                    // Transfer the contents of the input to the buffer.
-                    buffer[counter] = input[counter];
-
-                    // Increment the buffer counter and input counter.
-                    counter++;
-
-                    // Increment overall count.
-                    i++;
-                }
-                else if (isalpha(input[counter] > 0))
-                {
-                    // Letter can not contain any letters.
-                    printlexerror(INVALID_IDENT_ERR);
-                    return NULL;
-                }
-                else
-                {
-                    // Non numerical symbol.
-                    break;
-                }
-            }
-        }
-        else if (iscntrl(input[i]) > 0) // Input is a space
-        {
-            continue;
-        }
-        else // Input is invalid
-        {
-            printlexerror(INVALID_IDENT_ERR);
-        }
-
-        // Properly form the token string with sentinal.
-        buffer[counter] = '\0';
-
-        // Create a token from the buffer lexeme.
-        tokenize(buffer);
-
-        // Reset buffer
-        buffer = reset(buffer);
-    }
-
     if (buffer != NULL)
     {
         free(buffer);
     }
 
+    return NULL;
+}
+
+// Analyze raw lexis to tokenize.
+lexeme *lexanalyzer(char *input)
+{
+    int counter = 0, inputLen, wordCount = 0, j, i, flag = 0;
+    char *buffer;
+
+    inputLen = strlen(input);
+
+    // Initialize the list component.
+    list = malloc(sizeof(lexeme) * MAX_NUMBER_TOKENS);
+
+    // Input types: Alphabetical, Numerical, Identifier, Comment, Symbol, Invalid.
+    // Loop through raw lexis and categorize input by type.
+    for (i = 0; i < inputLen; (flag == 1) ? i : i++)
+    {
+        // Used to keep track of token length.
+        counter = 0;
+
+        // Dynamically allocate buffer memory (only enough space for 1 token).
+        buffer = malloc(sizeof(char) * (MAX_IDENT_LEN + 1));
+
+        if (DEBUG == 1)
+        {
+            printf("INPUT: %c --- I: %d --- \n", input[i], i);
+        }
+
+        // Decides whether to increase i or not.
+        flag = 0;
+
+        if (isalpha(input[i]) > 0) // Input is alphabetical
+        {
+            // Keep looping either until we get an error or run into a number.
+            while ((isalpha(input[i]) > 0) || (isdigit(input[i]) > 0))
+            {
+                // Transfer the contents of the input to the buffer.
+                buffer[counter] = input[i];
+
+                // Increment the buffer counter.
+                counter++;
+
+                i++;
+
+                // Identifiers must not be greater than 11 in length.
+                if (counter >= MAX_IDENT_LEN)
+                {
+                    if (DEBUG == 1)
+                    {
+                        printf("isalpha\n");
+                    }
+
+                    printlexerror(EXCESS_IDENT_ERR);
+                    return NULL;
+                }
+            }
+
+            // Doing this to prevent skipping over an end colon.
+            flag = 1;
+
+            // Properly form the token string with sentinal.
+            buffer[counter] = '\0';
+
+            if (DEBUG == 1)
+            {
+                printf("\nBUFFER BEFORE TOKENIZATION (ISALPHA): %s\n", buffer);
+            }
+
+            // Turn the identifier into a lexeme.
+            tokenize(buffer);
+
+            if (DEBUG == 1)
+            {
+                printf("BUFFER: %s, TYPE: %d, VAL: %d\n\n", list[lex_index].name, list[lex_index].type, list[lex_index].value);
+            }
+        }
+        else if (isdigit(input[i]) > 0) // Input is a digit
+        {
+            // Keep looping either until we get an error or run into a number.
+            while (isdigit(input[i]) > 0)
+            {
+                // Transfer the contents of the input to the buffer.
+                buffer[counter] = input[i];
+
+                // Increment the buffer counter and input counter.
+                counter++;
+
+                i++;
+
+                // Digits must not be greater than 5 in length.
+                if (counter > MAX_NUMBER_LEN)
+                {
+                    if (DEBUG == 1)
+                    {
+                        printf("isdigit\n");
+                    }
+
+                    printlexerror(EXCESS_NUM_ERR);
+                    return NULL;
+                }
+            }
+
+            // Identifier can not be declared directly behind digit.
+            if (isalpha(input[i]) > 0)
+            {
+                printlexerror(INVALID_IDENT_ERR);
+                return NULL;
+            }
+
+            // Doing this to prevent skipping over an end colon.
+            flag = 1;
+
+            // Properly form the token string with sentinal.
+            buffer[counter] = '\0';
+
+            if (DEBUG == 1)
+            {
+                printf("\nBUFFER BEFORE TOKENIZATION (ISDIGIT): %s\n", buffer);
+            }
+
+            // Turn the digit into a lexeme.
+            tokenize(buffer);
+
+            if (DEBUG == 1)
+            {
+                printf("BUFFER: %s, TYPE: %d, VAL: %d\n\n", list[lex_index].name, list[lex_index].type, list[lex_index].value);
+            }
+        }
+        else if (iscntrl(input[i]) > 0 ||
+                 input[i] == ' ' ||
+                 input[i] == '\n' ||
+                 input[i] == '\t' ||
+                 input[i] == '\0') // Input is a space
+        {
+            continue;
+        }
+        else if (input[i] == '/') // Input is a comment
+        {
+            if (i >= inputLen - 1)
+            {
+                if (DEBUG == 1)
+                {
+                    printf("comment\n");
+                }
+
+                // The input string has an unfinished comment as the last character.
+                printlexerror(INVALID_SYM_ERR);
+                return NULL;
+            }
+
+            i++;
+
+            // A comment is initiated.
+            if (input[i] == '/')
+            {
+                // All input skipped in this line is a comment.
+                while (input[i] != '\n')
+                {
+                    if (DEBUG == 1)
+                    {
+                        printf("inside comment i: %d\n", i);
+                    }
+                    i++;
+                }
+
+                if (DEBUG == 1)
+                {
+                    printf("\n");
+                }
+            }
+            else
+            {
+                if (DEBUG == 1)
+                {
+                    printf("Single / character error.\n");
+                }
+
+                // The input string has invalid symbol.
+                printlexerror(INVALID_SYM_ERR);
+                return NULL;
+            }
+
+            continue;
+        }
+        else // Input is a special symbol
+        {
+            if (input[i] == ':') // Assign Symbol
+            {
+                if (i >= inputLen - 1)
+                {
+                    if (DEBUG == 1)
+                    {
+                        printf("lol8\n");
+                    }
+
+                    // The input string has invalid symbol.
+                    printlexerror(INVALID_SYM_ERR);
+                    return NULL;
+                }
+
+                if (input[i+1] == '=')
+                {
+                    tokenize(":=");
+                }
+                else
+                {
+                    if (DEBUG == 1)
+                    {
+                        printf("lol7\n");
+                    }
+
+                    // The input string has invalid symbol.
+                    printlexerror(INVALID_SYM_ERR);
+                    return NULL;
+                }
+                i++;
+            }
+            else if (input[i] == '+') // Add Symbol
+            {
+                tokenize("+");
+            }
+            else if (input[i] == '-') // Subtract Symbol
+            {
+                tokenize("-");
+            }
+            else if (input[i] == '*') // Multiplication Symbol
+            {
+                tokenize("*");
+            }
+            else if (input[i] == '/') // Division Symbol
+            {
+                tokenize("/");
+            }
+            else if (input[i] == '%') // Mod Symbol
+            {
+                tokenize("%");
+            }
+            else if (input[i] == '=') // Equal Symbol
+            {
+                if (i >= inputLen - 1)
+                {
+                    // The input string has invalid symbol.
+                    printlexerror(INVALID_SYM_ERR);
+                    return NULL;
+                }
+
+                if (input[i+1] == '=')
+                {
+                    tokenize("==");
+                }
+                else
+                {
+                    if (DEBUG == 1)
+                    {
+                        printf("lol6\n");
+                    }
+
+                    // The input string has invalid symbol.
+                    printlexerror(INVALID_SYM_ERR);
+                    return NULL;
+                }
+                i++;
+            }
+            else if (input[i] == '!') // Not equal Symbol
+            {
+                if (i >= inputLen - 1)
+                {
+                    // The input string has invalid symbol.
+                    printlexerror(INVALID_SYM_ERR);
+                    printf("comment\n");
+                }
+
+                if (input[i+1] == '=')
+                {
+                    tokenize("!=");
+                }
+                else
+                {
+                    if (DEBUG == 1)
+                    {
+                        printf("lol5\n");
+                    }
+
+                    // The input string has invalid symbol.
+                    printlexerror(INVALID_SYM_ERR);
+                    return NULL;
+                }
+                i++;
+            }
+            else if (input[i] == '<') // Less than or equal to Symbol
+            {
+                if (i >= inputLen - 1)
+                {
+                    if (DEBUG == 1)
+                    {
+                        printf("lol1\n");
+                    }
+
+                    // The input string has invalid symbol.
+                    printlexerror(INVALID_SYM_ERR);
+                    return NULL;
+                }
+
+                if (input[i+1] == '=')
+                {
+                    tokenize("<=");
+                    i++;
+                }
+                else
+                {
+                    tokenize("<");
+                }
+            }
+            else if (input[i] == '>') // Greater than or equal to Symbol
+            {
+                if (i >= inputLen - 1)
+                {
+                    if (DEBUG == 1)
+                    {
+                        printf("lol3\n");
+                    }
+
+                    // The input string has invalid symbol.
+                    printlexerror(INVALID_SYM_ERR);
+                    return NULL;
+                }
+
+                if (input[i+1] == '=')
+                {
+                    tokenize(">=");
+                    i++;
+                }
+                else
+                {
+                    tokenize(">");
+                }
+            }
+            else if (input[i] == '(') // Parenthesis Open Symbol
+            {
+                tokenize("(");
+            }
+            else if (input[i] == ')') // Parenthesis Close Symbol
+            {
+                tokenize(")");
+            }
+            else if (input[i] == ',') // Comma Symbol
+            {
+                tokenize(",");
+            }
+            else if (input[i] == '.') // Period Symbol
+            {
+                tokenize(".");
+            }
+            else if (input[i] == ';') // Semicolon Symbol
+            {
+                tokenize(";");
+            }
+            else if (input[i] == '\n')
+            {
+                continue;
+            }
+            else if (input[i] == ' ')
+            {
+                continue;
+            }
+            else if (input[i] == '\t')
+            {
+                continue;
+            }
+            else // Other Symbol
+            {
+                if (DEBUG == 1)
+                {
+                    printf("input: |%c|\n", input[i]);
+                    printf("invalid\n");
+                }
+
+                printlexerror(INVALID_SYM_ERR);
+                return NULL;
+            }
+
+            if (DEBUG == 1)
+            {
+                printf("BUFFER: %s, TYPE: %d, VAL: %d\n\n", list[lex_index].name, list[lex_index].type, list[lex_index].value);
+            }
+        }
+
+        // Increment the lexeme index.
+        lex_index++;
+
+        // Reset the buffer on each iteration.
+        buffer = destroyBuffer(buffer);
+    }
+
+    printtokens();
+
 	return list;
 }
 
-//typedef struct lexeme {
-//    char name[12];
-//    int value;
-//    token_type type;
-//} lexeme;
-
-// Check if a string is all numerical.
-int isAllDigit(char *buffer)
+// Convert a string to an integer.
+int stringToInt(char *str)
 {
-    int i, strLen, flag = 0, result;
+    int digit = 0, i, strLen, val;
 
-    strLen = strlen(buffer);
-    for (i = 0; i < strLen; i++)
+    strLen = strlen(str);
+
+    // String is a single digit.
+    if (strLen == 1)
     {
-        // If result is 0, a character is not alphabetical.
-        if (isdigit(buffer[i]) <= 0)
-        {
-            flag = 1;
-        }
+        return (str[0] - '0');
     }
 
-    return flag;
+    // Algorithm to convert string to digit.
+    for (i = 1; i <= strLen; i++)
+    {
+        val = (atoi(&str[strLen - i]) / pow(10, i-1));
+        digit += (val * pow(10, i-1));
+    }
+
+    return digit;
 }
 
 // Build the lexeme.
@@ -189,7 +469,7 @@ void make_lexeme(char *name, int value, token_type type)
     list[lex_index].type = type;
 }
 
-// Tokenize input from buffer.
+// Tokenize input buffer.
 void tokenize(char *buffer)
 {
     // Categorize the input and tokenize it.
@@ -317,22 +597,30 @@ void tokenize(char *buffer)
     {
         make_lexeme(";", 33, semicolonsym);
     }
-    else if (isAllDigit(buffer) == 0)
+    else if (isalpha(buffer[0]) > 0)
     {
-        make_lexeme(buffer, 15, numbersym);
-    }
-    else // buffer is an identifier.
-    {
+        // Buffer is an identifier.
         make_lexeme(buffer, 14, identsym);
     }
+    else if (isdigit(buffer[0]) > 0)
+    {
+        // Buffer is a digit.
+        make_lexeme(buffer, stringToInt(buffer), numbersym);
+    }
+    else
+    {
+        if (DEBUG == 1)
+        {
+            printf("invalid in tokenizer\n");
+        }
 
-    // Increment the lexeme index.
-    lex_index++;
+        printlexerror(INVALID_IDENT_ERR);
+    }
 }
 
 // Print the available tokens (identifiers, keywords,
 // separators, operators, literal, comments) from a lexis.
-void printtokens()
+void printtokens(void)
 {
 	int i;
 	printf("Lexeme Table:\n");
@@ -454,6 +742,7 @@ void printtokens()
 		else
 			printf("%d ", list[i].type);
 	}
+
 	printf("\n");
 	list[lex_index++].type = -1;
 }
@@ -476,5 +765,6 @@ void printlexerror(int type)
     {
         free(list);
     }
+
 	return;
 }
